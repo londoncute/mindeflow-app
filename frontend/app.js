@@ -1,113 +1,120 @@
-// ===== »Õ»÷»¿À»«¿÷»ﬂ =====
-const API_URL = "http://localhost:8080/api/v1"; // œÓÚ ËÁ ‚‡¯Â„Ó .env
+// ===== –ö–æ–Ω—Ñ–∏–≥—É—Ä–∞—Ü–∏—è =====
+const API_URL = "http://localhost:8080/api/v1";
 
 document.addEventListener("DOMContentLoaded", () => {
     initApp();
-    loadUserData(); // «‡„ÛÊ‡ÂÏ ‰‡ÌÌ˚Â ÔÓÎ¸ÁÓ‚‡ÚÂÎˇ ÔË ÒÚ‡ÚÂ
+    loadUserData(); 
 });
 
 async function initApp() {
-    setupAddButtons();
-    setupInboxActions();
+    // 1. –ù–∞—Ö–æ–¥–∏–º –æ—Å–Ω–æ–≤–Ω—ã–µ —ç–ª–µ–º–µ–Ω—Ç—ã
+    const addMainBtn = document.getElementById('add-task-btn-main');
+    const addInboxBtn = document.getElementById('add-to-inbox-btn');
+    const inboxList = document.getElementById('inbox-list');
+    const tasksList = document.getElementById('tasks-list');
+
+    // 2. –õ–æ–≥–∏–∫–∞ –¥–æ–±–∞–≤–ª–µ–Ω–∏—è –Ω–æ–≤—ã—Ö –∑–∞–¥–∞—á
+    const handleAddTask = () => {
+        const text = prompt("–û–ø–∏—à–∏—Ç–µ –∑–∞–¥–∞—á—É:");
+        if (text && text.trim() !== "") {
+            addInboxItem(text);
+        }
+    };
+
+    if (addMainBtn) addMainBtn.onclick = handleAddTask;
+    if (addInboxBtn) addInboxBtn.onclick = handleAddTask;
+
+    // 3. –û–±–Ω–æ–≤–ª–µ–Ω–∏–µ –Ω–∞—á–∞–ª—å–Ω–æ–≥–æ —Å–æ—Å—Ç–æ—è–Ω–∏—è —Å—á–µ—Ç—á–∏–∫–æ–≤
+    updateUI();
 }
 
-// ===== œŒÀ”◊≈Õ»≈ ƒ¿ÕÕ€’ œŒÀ‹«Œ¬¿“≈Àﬂ =====
+// ===== –ó–∞–≥—Ä—É–∑–∫–∞ –¥–∞–Ω–Ω—ã—Ö –ø–æ–ª—å–∑–æ–≤–∞—Ç–µ–ª—è —Å –±—ç–∫–µ–Ω–¥–∞ =====
 async function loadUserData() {
+    const headerTitle = document.getElementById('header-title');
     try {
         const response = await fetch(`${API_URL}/user`);
         if (response.ok) {
             const data = await response.json();
-            // Œ·ÌÓ‚ÎˇÂÏ ËÏˇ ‚ Á‡„ÓÎÓ‚ÍÂ (h1 ‚ index.htm)
-            const headerTitle = document.querySelector("#header-top h1");
             if (headerTitle) {
-                headerTitle.textContent = `ƒÓ·ÓÂ ÛÚÓ, ${data.full_name}!`;
+                headerTitle.textContent = `–î–æ–±—Ä–æ–≥–æ –≤—Ä–µ–º–µ–Ω–∏ —Å—É—Ç–æ–∫, ${data.full_name}!`;
             }
         }
     } catch (error) {
-        console.error("Œ¯Ë·Í‡ Á‡„ÛÁÍË ‰‡ÌÌ˚ı ÔÓÎ¸ÁÓ‚‡ÚÂÎˇ:", error);
+        console.error("–û—à–∏–±–∫–∞ –∑–∞–≥—Ä—É–∑–∫–∏ –ø–æ–ª—å–∑–æ–≤–∞—Ç–µ–ª—è:", error);
+        // –ó–∞–≥–ª—É—à–∫–∞, –µ—Å–ª–∏ –±—ç–∫ –Ω–µ –∑–∞–ø—É—â–µ–Ω
+        if (headerTitle) headerTitle.textContent = "–î–æ–±—Ä–æ–≥–æ –≤—Ä–µ–º–µ–Ω–∏ —Å—É—Ç–æ–∫, –î–º–∏—Ç—Ä–∏–π!";
     }
 }
 
-// ===== ƒŒ¡¿¬À≈Õ»≈ «¿ƒ¿◊ =====
-function setupAddButtons() {
-    const buttons = document.querySelectorAll("button");
-
-    buttons.forEach(btn => {
-        if (btn.textContent.includes("ƒÓ·‡‚ËÚ¸")) {
-            btn.addEventListener("click", async () => {
-                const text = prompt("¬‚Â‰ËÚÂ Á‡‰‡˜Û:");
-                if (!text) return;
-
-                // «‰ÂÒ¸ ‚ ·Û‰Û˘ÂÏ ÏÓÊÌÓ ‰Ó·‡‚ËÚ¸ POST Á‡ÔÓÒ Í ·˝ÍÂÌ‰Û
-                addInboxItem(text);
-            });
-        }
-    });
-}
-
+// ===== –°–æ–∑–¥–∞–Ω–∏–µ —ç–ª–µ–º–µ–Ω—Ç–∞ –≤ Inbox =====
 function addInboxItem(text) {
-    const container = document.querySelector("#card-inbox .flex.flex-col");
+    const container = document.getElementById('inbox-list');
     if (!container) return;
 
     const div = document.createElement("div");
-    div.className = "flex items-center justify-between py-4 border-b border-slate-100 group";
+    div.className = "flex items-center justify-between py-4 border-b border-slate-100 group transition-all";
 
     div.innerHTML = `
-    <span class="text-slate-800 font-medium text-[15px]">${text}</span>
-    <button class="px-4 py-1.5 rounded-lg text-sm font-medium text-indigo-600 border border-indigo-100 bg-white hover:bg-indigo-50">
-      Œ·‡·ÓÚ‡Ú¸
-    </button>
-  `;
+        <span class="text-slate-800 font-medium text-[15px]">${text}</span>
+        <button class="action-process px-4 py-1.5 rounded-lg text-sm font-medium text-indigo-600 border border-indigo-100 bg-white hover:bg-indigo-50 transition-colors">
+            –û–±—Ä–∞–±–æ—Ç–∞—Ç—å
+        </button>
+    `;
+
+    // –ö–Ω–æ–ø–∫–∞ –ø–µ—Ä–µ–º–µ—â–µ–Ω–∏—è –≤ Tasks
+    div.querySelector('.action-process').onclick = () => {
+        div.remove();
+        moveToTasks(text);
+        updateUI();
+    };
 
     container.appendChild(div);
+    updateUI();
 }
 
-// ===== Œ¡–¿¡Œ“ ¿  ÕŒœŒ  =====
-function setupInboxActions() {
-    const container = document.querySelector("#card-inbox .flex.flex-col");
-    if (!container) return;
-
-    container.addEventListener("click", (e) => {
-        if (e.target.tagName === "BUTTON" && e.target.textContent.includes("Œ·‡·ÓÚ‡Ú¸")) {
-            const item = e.target.closest("div.group");
-            if (item) {
-                moveToTasks(item);
-            }
-        }
-    });
-}
-
-// ===== œ≈–≈ÕŒ— ¬ TASKS =====
-function moveToTasks(item) {
-    const text = item.querySelector("span").textContent;
-
-    item.remove();
-
-    const tasksContainer = document.querySelector("#card-tasks .flex.flex-col");
+// ===== –ü–µ—Ä–µ–º–µ—â–µ–Ω–∏–µ –≤ –∫–æ–ª–æ–Ω–∫—É Tasks =====
+function moveToTasks(text) {
+    const tasksContainer = document.getElementById('tasks-list');
     if (!tasksContainer) return;
 
     const div = document.createElement("div");
-    div.className = "bg-slate-50/80 rounded-xl p-3.5 flex items-center justify-between border border-slate-100 mb-2.5";
+    // –°—Ç–∏–ª—å –∫–∞—Ä—Ç–æ—á–∫–∏ –∫–∞–∫ –≤ —Ç–≤–æ–µ–º –¥–∏–∑–∞–π–Ω–µ
+    div.className = "bg-slate-50/80 rounded-xl p-3.5 flex items-center justify-between border border-slate-100 mb-2.5 transition-all hover:border-indigo-200";
 
     div.innerHTML = `
-    <div class="flex items-center gap-3">
-      <i class="fa-regular fa-circle text-slate-300 text-lg"></i>
-      <span class="text-slate-700 font-medium text-[15px]">${text}</span>
-    </div>
-    <button class="bg-indigo-600 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-indigo-700 transition-colors">
-      √ÓÚÓ‚Ó
-    </button>
-  `;
+        <div class="flex items-center gap-3">
+            <i class="fa-regular fa-circle text-slate-300 text-lg"></i>
+            <span class="text-slate-700 font-medium text-[15px]">${text}</span>
+        </div>
+        <button class="action-done bg-indigo-600 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-600/10">
+            –ì–æ—Ç–æ–≤–æ
+        </button>
+    `;
+
+    // –ö–Ω–æ–ø–∫–∞ "–ì–æ—Ç–æ–≤–æ" (–ø—Ä–æ—Å—Ç–æ —É–¥–∞–ª—è–µ–º –∑–∞–¥–∞—á—É)
+    div.querySelector('.action-done').onclick = () => {
+        div.classList.add('opacity-0', 'scale-95');
+        setTimeout(() => {
+            div.remove();
+            updateUI();
+        }, 200);
+    };
 
     tasksContainer.prepend(div);
 }
 
-// =====  ÕŒœ ¿ "√Œ“Œ¬Œ" =====
-document.addEventListener("click", (e) => {
-    if (e.target.textContent.trim() === "√ÓÚÓ‚Ó") {
-        const task = e.target.closest("div.bg-slate-50\\/80");
-        if (task) {
-            task.remove();
+// ===== –û–±–Ω–æ–≤–ª–µ–Ω–∏–µ –∏–Ω—Ç–µ—Ä—Ñ–µ–π—Å–∞ (—Å—á–µ—Ç—á–∏–∫–∏ –∏ –ø—É—Å—Ç—ã–µ —Å–æ—Å—Ç–æ—è–Ω–∏—è) =====
+function updateUI() {
+    const inboxList = document.getElementById('inbox-list');
+    const emptyState = document.getElementById('inbox-empty-state');
+    const sidebarBadge = document.getElementById('sidebar-inbox-count');
+
+    if (inboxList && sidebarBadge) {
+        const count = inboxList.children.length;
+        sidebarBadge.textContent = count;
+        
+        if (emptyState) {
+            count === 0 ? emptyState.classList.remove('hidden') : emptyState.classList.add('hidden');
         }
     }
-});
+}
