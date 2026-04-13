@@ -15,9 +15,13 @@
 
 
 доступные endpoints на данный момент:
- - GET /health
- - GET /user
- - POST /inbox
+ - GET /health 
+ - GET /user # Получить пользователя
+ - POST /inbox # Создать элемент inbox
+ - GET /inbox?status=new&limit=10&offset=0 # status - фильтр по статусу, limit - кол-во элементов, offset - смещение
+ - DELETE /inbox/{id} # Удалить элемент inbox
+ - POST /inbox/{id}/skip # Переместить элемент в конец очереди
+    
 
  - BASE URL: localhost:8080
 
