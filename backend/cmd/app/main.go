@@ -12,6 +12,10 @@ import (
 	userHttpPkg "mindeflow-app/backend/internal/user/transport"
 	"net/http"
 
+	projectRepository "mindeflow-app/backend/internal/project/repository"
+	projectService "mindeflow-app/backend/internal/project/service"
+	projectTransport "mindeflow-app/backend/internal/project/transport"
+
 	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/go-chi/chi/v5"
@@ -37,6 +41,10 @@ func main() {
 	inboxService := inboxServicePkg.New(inboxRepo)
 	inboxHandler := inboxHandlerPkg.NewHandler(inboxService)
 
+	projectRepo := projectRepository.NewPostgresRepository(pool)
+	projectService := projectService.New(projectRepo)
+	projectHandler := projectTransport.NewHandler(projectService)
+
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -51,6 +59,8 @@ func main() {
 	r.Route("/", func(r chi.Router) {
 		userHttpPkg.RegisterRoutes(r, userHandler)
 		inboxHandlerPkg.RegisterRoutes(r, inboxHandler)
+		projectTransport.RegisterRoutes(r, projectHandler)
+
 	})
 
 	addr := ":" + cfg.AppPort

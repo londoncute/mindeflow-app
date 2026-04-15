@@ -71,10 +71,11 @@ func (h *Handler) ListInboxItems(w http.ResponseWriter, r *http.Request) {
 
 	for _, item := range result.Items {
 		resp.Data = append(resp.Data, InboxItemResponse{
-			ID:     item.ID,
-			Title:  item.Title,
-			Text:   item.Text,
-			Status: item.Status,
+			ID:       item.ID,
+			Title:    item.Title,
+			Text:     item.Text,
+			Status:   item.Status,
+			Position: item.Position,
 		})
 	}
 

@@ -14,6 +14,7 @@ type InboxItem struct {
 	Title       string
 	Text        string
 	Status      string
+	Position    int
 	CreatedAt   time.Time
 	CompletedAt *time.Time
 }
@@ -37,6 +38,7 @@ type ListResult struct {
 }
 
 type SkipResult struct {
-	ID     int    `json:"id"`
-	Status string `json:"status"`
+	ID       int    `json:"id"`
+	Status   string `json:"status"`
+	Position int    `json:"position"`
 }

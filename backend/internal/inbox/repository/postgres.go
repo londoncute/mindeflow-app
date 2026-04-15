@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"mindeflow-app/backend/internal/inbox"
 	"strings"
 
@@ -21,15 +22,20 @@ func NewPostgresRepository(pool *pgxpool.Pool) *PostgresRepository {
 
 func (r *PostgresRepository) Create(ctx context.Context, input inbox.CreateInput) (inbox.InboxItem, error) {
 	query := `
-	INSERT INTO inbox (title, text, status)
-	VALUES ($1, $2, 'new')
-	RETURNING id, title, text, status, created_at, completed_at
+	INSERT INTO inbox (title, text, status, position)
+	VALUES ($1, $2, 'new', (SELECT COALESCE(MAX(position), 0) + 1 FROM inbox))
+	RETURNING id, title, text, status, position, created_at, completed_at
 	`
 
 	var item inbox.InboxItem
 
 	err := r.pool.QueryRow(ctx, query, input.Title, input.Text).Scan(&item.ID, &item.Title, &item.Text,
-		&item.Status, &item.CreatedAt, &item.CompletedAt)
+		&item.Status, &item.Position, &item.CreatedAt, &item.CompletedAt)
+
+	if err != nil {
+		log.Println("create inbox error:", err)
+		return inbox.InboxItem{}, err
+	}
 
 	return item, err
 }
@@ -59,10 +65,10 @@ func (r *PostgresRepository) List(ctx context.Context, filter inbox.ListFilter) 
 	args = append(args, filter.Limit, filter.Offset)
 
 	listQuery := fmt.Sprintf(`
-		SELECT id, title, text, status, created_at, completed_at
+		SELECT id, title, text, position, status, created_at, completed_at
 		FROM inbox
 		%s
-		ORDER BY created_at ASC
+		ORDER BY position ASC
 		LIMIT $%d OFFSET $%d
 	`, whereSQL, len(args)-1, len(args))
 
@@ -75,7 +81,7 @@ func (r *PostgresRepository) List(ctx context.Context, filter inbox.ListFilter) 
 	items := make([]inbox.InboxItem, 0)
 	for rows.Next() {
 		var item inbox.InboxItem
-		if err := rows.Scan(&item.ID, &item.Title, &item.Text, &item.Status, &item.CreatedAt, &item.CompletedAt); err != nil {
+		if err := rows.Scan(&item.ID, &item.Title, &item.Text, &item.Position, &item.Status, &item.CreatedAt, &item.CompletedAt); err != nil {
 			return inbox.ListResult{}, err
 		}
 		items = append(items, item)
@@ -134,14 +140,25 @@ func (r *PostgresRepository) Delete(ctx context.Context, id int) error {
 func (r *PostgresRepository) Skip(ctx context.Context, id int) (inbox.InboxItem, error) {
 	query := `
 		UPDATE inbox
-		SET created_at = NOW()
+		SET position = (
+			SELECT COALESCE(MAX(position), 0) + 1
+			FROM inbox
+		)
 		WHERE id = $1
-		RETURNING id, title, status, created_at, completed_at
+		RETURNING id, title, text, status, position, created_at, completed_at
 	`
 
 	var item inbox.InboxItem
 	err := r.pool.QueryRow(ctx, query, id).
-		Scan(&item.ID, &item.Title, &item.Status, &item.CreatedAt, &item.CompletedAt)
+		Scan(
+			&item.ID,
+			&item.Title,
+			&item.Text,
+			&item.Status,
+			&item.Position,
+			&item.CreatedAt,
+			&item.CompletedAt,
+		)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return inbox.InboxItem{}, ErrInboxItemNotFound

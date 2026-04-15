@@ -6,10 +6,11 @@ type CreateRequest struct {
 }
 
 type InboxItemResponse struct {
-	ID     int    `json:"id"`
-	Title  string `json:"title"`
-	Text   string `json:"text"`
-	Status string `json:"status"`
+	ID       int    `json:"id"`
+	Title    string `json:"title"`
+	Text     string `json:"text"`
+	Status   string `json:"status"`
+	Position int    `json:"position"`
 }
 
 type ListResponse struct {
