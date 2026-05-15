@@ -1,0 +1,2 @@
+ALTER TABLE inbox
+DROP COLUMN text;
